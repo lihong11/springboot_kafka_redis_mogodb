@@ -17,6 +17,9 @@ import uyun.entity.ResponseEntity;
 
 import java.util.*;
 
+import static org.springframework.data.mongodb.core.query.Criteria.where;
+import static org.springframework.data.mongodb.core.query.Query.query;
+
 @Slf4j
 @Component
 public class EventConsumer extends Thread {
@@ -86,7 +89,7 @@ public class EventConsumer extends Thread {
 
 
         if(0!=status){
-            Query query = new Query(Criteria.where("incidentId").is(id)).with(new Sort(Sort.Direction.DESC,"operateTime")).limit(1);
+            Query query = new Query(where("incidentId").is(id)).with(new Sort(Sort.Direction.DESC,"operateTime")).limit(1);
             List<Map> list = mongoTemplate.find(query, Map.class,"IncidentLog");
             for(Map value:list){
                 operatorName = Optional.ofNullable(value.get("operatorName")).orElse("").toString();
@@ -95,6 +98,9 @@ public class EventConsumer extends Thread {
                 calendar.setTime(date);
                 operateTime = calendar.getTime();
             }
+
+            List msgDataList = new ArrayList();
+            msgDataList.add(JSONObject.toJSONString(alertStatusEntity));
             alertStatusEntity =  AlertStatusEntity.builder()
                      .id(id)
                      .name(name)
@@ -106,10 +112,20 @@ public class EventConsumer extends Thread {
             ResponseEntity responseAlertStatusEntity = ResponseEntity.builder()
                     .msgCode("ALARM_STATUS")
                     .msgType("MODIFY")
-                    .msgData(JSONObject.toJSONString(alertStatusEntity))
+                    .msgData(msgDataList)
                     .build();
             log.info("发送告警信息:"+ JSONObject.toJSONString(responseAlertStatusEntity));
             kafkaTemplate.send("TOPIC_UYUN_ALARM",  JSONObject.toJSONString(responseAlertStatusEntity));
         }
+      }
+
+      public void testMongodb(){
+          Query query1 = new Query(where("incidentId").is("111")).with(new Sort(Sort.Direction.DESC,"operateTime")).limit(1);
+          List<Map> list = mongoTemplate.find(query1, Map.class,"IncidentLog");
+
+          Query query2 = new Query(where("incidentId").is("111")).with(new Sort(Sort.Direction.DESC,"operateTime")).limit(1);
+          mongoTemplate.findOne(query(where("name").is("Joe")), Map.class);
+
+
       }
     }

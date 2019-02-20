@@ -1,0 +1,23 @@
+spring:
+  application:
+  # 指定注册到eureka server上的服务名称，对于电影微服务，本系列将名称设为microservice-consumer-movie
+    name: microservice-provider-user
+management:
+  endpoints:
+    web:
+      exposure:
+        # 开放所有监控端点
+        include: '*'
+  endpoint:
+    health:
+      # 是否展示健康检查详情
+      show-details: always
+eureka:
+  client:
+    # 是否要注册到其他Eureka Server实例
+    register-with-eureka: false
+    # 是否要从其他Eureka Server实例获取数据
+    fetch-registry: false
+    service-url:
+      # 指定eureka server通信地址，注意/eureka/小尾巴不能少
+      defaultZone: http://localhost:8099/eureka/
